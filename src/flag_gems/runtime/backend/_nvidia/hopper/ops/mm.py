@@ -90,26 +90,26 @@ def mm_kernel_general(
     group_size = min(grid_m - group_id * GROUP_M, GROUP_M)
     pid_m = group_id * GROUP_M + (pid % group_size)
     pid_n = (pid % width) // (group_size)
-    
-    if (M % BLOCK_M == 0 and N % BLOCK_N == 0 and K % BLOCK_K == 0):
+
+    if M % BLOCK_M == 0 and N % BLOCK_N == 0 and K % BLOCK_K == 0:
         # offset
         offset_am = pid_m * BLOCK_M
         offset_bn = pid_n * BLOCK_N
         offset_k = 0
 
         a_desc = tl.make_tensor_descriptor(
-            base = A,
-            shape = [M, K],
-            strides = [K, 1],
-            block_shape = [BLOCK_M, BLOCK_K],
+            base=A,
+            shape=[M, K],
+            strides=[K, 1],
+            block_shape=[BLOCK_M, BLOCK_K],
         )
 
         # row-major
         b_desc = tl.make_tensor_descriptor(
-            base = B,
-            shape = [K, N],
-            strides = [N, 1],
-            block_shape = [BLOCK_K, BLOCK_N],
+            base=B,
+            shape=[K, N],
+            strides=[N, 1],
+            block_shape=[BLOCK_K, BLOCK_N],
         )
 
         # column-major
@@ -119,12 +119,12 @@ def mm_kernel_general(
         #     strides = [K, 1],
         #     block_shape = [BLOCK_N, BLOCK_K],
         # )
-        
+
         c_desc = tl.make_tensor_descriptor(
-            base = C,
-            shape = [M, N],
-            strides = [N, 1],
-            block_shape = [BLOCK_M, BLOCK_N],
+            base=C,
+            shape=[M, N],
+            strides=[N, 1],
+            block_shape=[BLOCK_M, BLOCK_N],
         )
 
         acc = tl.zeros((BLOCK_M, BLOCK_N), dtype=tl.float32)
@@ -216,6 +216,7 @@ def general_mm(a, b, c, M, N, K):
 
     def alloc_fn(size: int, align: int, stream: Optional[int]):
         return torch.empty(size, dtype=torch.int8, device=a.device)
+
     triton.set_allocator(alloc_fn)
 
     with torch_device_fn.device(a.device):
